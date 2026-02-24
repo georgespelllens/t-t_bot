@@ -15,7 +15,6 @@ from keyboards.inline import (
     kb_referral_source,
 )
 from services.notifications import notify_new_application
-from services.sheets import append_application_row
 from states.application import ApplicationStates
 from texts.ru import REFERRAL_LABELS, ROLE_LABELS, TEXTS
 
@@ -111,12 +110,6 @@ async def confirm_application(callback: CallbackQuery, state: FSMContext) -> Non
             referral_source=data["referral_source"],
         )
         user = await get_user(session, telegram_id)
-
-    # Google Sheets
-    try:
-        await append_application_row(user)
-    except Exception:
-        log.exception("Google Sheets write failed for user %s", telegram_id)
 
     # Notify curator
     try:
