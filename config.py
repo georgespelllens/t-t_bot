@@ -19,8 +19,18 @@ class Settings(BaseSettings):
     payment_webhook_secret: str = Field(..., alias="PAYMENT_WEBHOOK_SECRET")
     payment_webhook_path: str = Field("/payment", alias="PAYMENT_WEBHOOK_PATH")
 
-    # Database
+    # Database — Railway даёт postgresql://, нужен postgresql+asyncpg://
     database_url: str = Field(..., alias="DATABASE_URL")
+
+    @computed_field
+    @property
+    def async_database_url(self) -> str:
+        url = self.database_url
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return url
 
     # Program
     program_start_date: date = Field(..., alias="PROGRAM_START_DATE")
