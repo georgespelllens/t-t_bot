@@ -1,5 +1,4 @@
 import logging
-from datetime import datetime, timezone
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -10,13 +9,12 @@ from db.engine import async_session_factory
 from db.repository import get_user, update_user_application
 from keyboards.inline import (
     kb_application_confirm,
-    kb_main_menu,
     kb_payment_link,
     kb_referral_source,
 )
 from services.notifications import notify_new_application
 from states.application import ApplicationStates
-from texts.ru import REFERRAL_LABELS, ROLE_LABELS, TEXTS
+from texts.ru import REFERRAL_LABELS, TEXTS
 
 router = Router()
 log = logging.getLogger(__name__)
@@ -26,33 +24,25 @@ log = logging.getLogger(__name__)
 async def start_application(callback: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
     await state.set_state(ApplicationStates.waiting_name)
-
-    async with async_session_factory() as session:
-        user = await get_user(session, callback.from_user.id)
-
-    # Pre-fill name from Telegram profile as hint
-    name_hint = callback.from_user.full_name or ""
-    await state.update_data(prefill_name=name_hint)
-
     await callback.message.answer(TEXTS["apply_step_name"])
     await callback.answer()
 
 
-@router.message(ApplicationStates.waiting_name)
+@router.message(ApplicationStates.waiting_name, F.text)
 async def process_name(message: Message, state: FSMContext) -> None:
     await state.update_data(full_name=message.text.strip())
     await state.set_state(ApplicationStates.waiting_city)
     await message.answer(TEXTS["apply_step_city"])
 
 
-@router.message(ApplicationStates.waiting_city)
+@router.message(ApplicationStates.waiting_city, F.text)
 async def process_city(message: Message, state: FSMContext) -> None:
     await state.update_data(city=message.text.strip())
     await state.set_state(ApplicationStates.waiting_organization)
     await message.answer(TEXTS["apply_step_organization"])
 
 
-@router.message(ApplicationStates.waiting_organization)
+@router.message(ApplicationStates.waiting_organization, F.text)
 async def process_organization(message: Message, state: FSMContext) -> None:
     await state.update_data(organization=message.text.strip())
     await state.set_state(ApplicationStates.waiting_referral)
@@ -98,7 +88,6 @@ async def confirm_application(callback: CallbackQuery, state: FSMContext) -> Non
     await state.clear()
 
     telegram_id = callback.from_user.id
-    username = callback.from_user.username or ""
 
     async with async_session_factory() as session:
         await update_user_application(
@@ -111,7 +100,6 @@ async def confirm_application(callback: CallbackQuery, state: FSMContext) -> Non
         )
         user = await get_user(session, telegram_id)
 
-    # Notify curator
     try:
         await notify_new_application(user)
     except Exception:

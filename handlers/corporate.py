@@ -24,21 +24,21 @@ async def start_corporate(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
 
 
-@router.message(CorporateStates.waiting_theater_name)
+@router.message(CorporateStates.waiting_theater_name, F.text)
 async def process_theater_name(message: Message, state: FSMContext) -> None:
     await state.update_data(theater_name=message.text.strip())
     await state.set_state(CorporateStates.waiting_city)
     await message.answer(TEXTS["corporate_step_city"])
 
 
-@router.message(CorporateStates.waiting_city)
+@router.message(CorporateStates.waiting_city, F.text)
 async def process_city(message: Message, state: FSMContext) -> None:
     await state.update_data(city=message.text.strip())
     await state.set_state(CorporateStates.waiting_headcount)
     await message.answer(TEXTS["corporate_step_headcount"])
 
 
-@router.message(CorporateStates.waiting_headcount)
+@router.message(CorporateStates.waiting_headcount, F.text)
 async def process_headcount(message: Message, state: FSMContext) -> None:
     text = message.text.strip()
     if not text.isdigit() or int(text) < 1:
@@ -61,7 +61,7 @@ async def process_format(callback: CallbackQuery, state: FSMContext) -> None:
     await callback.answer()
 
 
-@router.message(CorporateStates.waiting_tasks)
+@router.message(CorporateStates.waiting_tasks, F.text)
 async def process_tasks(message: Message, state: FSMContext) -> None:
     await state.update_data(tasks_text=message.text.strip())
     await state.set_state(CorporateStates.confirming)

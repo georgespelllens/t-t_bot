@@ -1,7 +1,8 @@
 import logging
 
 from aiogram import F, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, StateFilter
+from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery, Message
 
 from db.engine import async_session_factory
@@ -55,6 +56,6 @@ async def handle_main_menu(callback: CallbackQuery) -> None:
     await callback.answer()
 
 
-@router.message()
+@router.message(StateFilter(default_state))
 async def handle_unknown(message: Message) -> None:
     await message.answer(TEXTS["unknown_message"], reply_markup=kb_main_menu())
