@@ -62,8 +62,6 @@ async def on_shutdown(app: web.Application) -> None:
     scheduler: AsyncIOScheduler = app["scheduler"]
 
     scheduler.shutdown(wait=False)
-    if not settings.dev_mode:
-        await bot.delete_webhook()
     await bot.session.close()
     log.info("Bot shut down")
 
